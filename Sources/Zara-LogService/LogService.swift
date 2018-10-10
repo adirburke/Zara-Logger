@@ -13,6 +13,7 @@ open class LogService {
     
     public init(name : String) {
         self.name = name
+        start()
     }
     ///The max size a log file can be in Kilobytes. Default is 1024 (1 MB)
     open var maxFileSize: UInt64 = 2048
