@@ -48,7 +48,7 @@ open class LogService {
     
     func start() {
             write("===========================================================")
-            write("==========  START \(name) \(Date().DtimeStamp()) ===========")
+            write("==========  START \(name) \(Date().timeStamp()) ===========")
             write("===========================================================")
     }
 
@@ -78,7 +78,7 @@ open class LogService {
             case is String.Type, is Int.Type, is Bool.Type:
                 writeText = "\(text)\(terminator)"
             case is Date.Type:
-                writeText = "\((text as! Date).DtimeStamp())\(terminator)"
+                writeText = "\((text as! Date).timeStamp())\(terminator)"
             default:
                 writeText = "\(description(r: text))\(terminator)"
             }
@@ -133,7 +133,7 @@ open class LogService {
                     str += label
                     str += ": "
                     if value is Date {
-                        str += "\((value as! Date).DtimeStamp()),"
+                        str += "\((value as! Date).timeStamp()),"
                     } else {
                         str += "\(value),"
                     }
@@ -149,14 +149,14 @@ open class LogService {
     
     public func apiLog(_ function : String, _ type : String,_  xml : String) {
         write("====================================================")
-        write("\(Date().DtimeStamp()) \(function) \(type)")
+        write("\(Date().timeStamp()) \(function) \(type)")
         write(xml)
         
     }
     
     ///gets the log name
     func logName(_ num :Int) -> String {
-        return "\(name)-\(Date().DdateString())-\(num).log"
+        return "\(name)-\(Date().dateString())-\(num).log"
     }
     
     ///get the default log directory
@@ -167,7 +167,7 @@ open class LogService {
         let paths = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)
         path = "\(paths[0])/Logs"
         #elseif os(macOS)
-        path = "/Users/server/logs/\(Date().DdateString())"
+        path = "/Users/server/logs/\(Date().dateString())"
         #endif
         if !fileManager.fileExists(atPath: path) && path != ""  {
             do {
