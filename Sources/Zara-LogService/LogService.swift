@@ -181,14 +181,14 @@ open class LogService {
     
 }
 
-public func logMessage(log : LogService, _ s: Any...) {
-    print(Date().timeStamp(), separator: "", terminator: " : ")
+public func logMessage(log : LogService, _ s: Any..., terminator: String = "\n", console : Bool = true) {
+    if console {print(Date().timeStamp(), separator: "", terminator: " : ")}
     log.write("[\(Date().timeStamp())]", terminator: " : ")
     for i in s {
-        print(i, separator: "", terminator: "")
+        if console { print(i, separator: "", terminator: "") }
         log.write(i, terminator: "")
     }
-    log.write("", terminator: "\n")
-    print("", separator: "", terminator: "\n")
+    log.write("", terminator: terminator)
+    if console { print("", separator: "", terminator: terminator)}
     
 }
