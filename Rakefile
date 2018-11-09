@@ -5,26 +5,6 @@ require 'xcodeproj'
 task :test do
 
     system "swift package generate-xcodeproj"
-    project = Xcodeproj::Project.open('Dependencies.xcodeproj')
-
-    project.targets.each do |target|
-        puts target.name
-        if target.name == "TestServer"
-            puts  "FOUND"
-            target.build_configurations.each  { |config|
-                config.build_settings['OTHER_LDFLAGS'] = "-lz"
-
-            }
-
-
-
-
-
-        end
-    end
-
-
-  project.save
 end
 
 task :xcodeproj do
