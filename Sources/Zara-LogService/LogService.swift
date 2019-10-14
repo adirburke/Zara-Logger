@@ -11,7 +11,7 @@ import projectConstants
 ///The log class containing all the needed methods
 open class LogService {
     
-    static var test : Int
+//    static var test : Int
     
     public init(name : String) {
         self.name = name
