@@ -168,7 +168,7 @@ open class LogService {
         #if os(iOS)
         let paths = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)
         path = "\(paths[0])/Logs"
-        #elseif os(macOS)
+        #elseif os(macOS) || os(Linux)
         path = "/Users/server/logs/\(Date().dateString())"
         #endif
         if !fileManager.fileExists(atPath: path) && path != ""  {
