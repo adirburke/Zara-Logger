@@ -104,9 +104,9 @@ open class LogService {
     ///check the size of a file
     func fileSize(_ path: String) -> UInt64 {
         let fileManager = FileManager.default
-        let attrs: NSDictionary? = try? fileManager.attributesOfItem(atPath: path) as NSDictionary
-        if let dict = attrs {
-            return dict.fileSize()
+        let attrs = try? fileManager.attributesOfItem(atPath: path)
+        if let dict = attrs, let size =  dict[FileAttributeKey.size] as? UInt64 {
+            return size
         }
         return 0
     }
