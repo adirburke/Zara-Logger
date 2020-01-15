@@ -180,6 +180,20 @@ open class LogService {
         return path
     }
     
+    
+    
+    public func logMessage(_ s: Any..., terminator: String = "\n", console : Bool = true) {
+        if console {print(Date().timeStamp(), separator: "", terminator: " : ")}
+        self.write("[\(Date().timeStamp())]", terminator: " : ")
+        for i in s {
+            if console { print(i, separator: "", terminator: "") }
+            self.write(i, terminator: "")
+        }
+        self.write("", terminator: terminator)
+        if console { print("", separator: "", terminator: terminator)}
+        
+    }
+    
 }
 
 public func logMessage(log : LogService, _ s: Any..., terminator: String = "\n", console : Bool = true) {
