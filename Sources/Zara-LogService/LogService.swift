@@ -8,6 +8,8 @@
 import Foundation
 import projectConstants
 
+//import ZaraDTO
+
 ///The log class containing all the needed methods
 open class LogService {
     
