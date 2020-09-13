@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import projectConstants
+import Common
 
 //import ZaraDTO
 
