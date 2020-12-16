@@ -18,7 +18,7 @@ let package = Package(
             targets: ["Zara-Logger"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/HanavePtyLtd/projectConstants.git"),
+        .package(url: "https://github.com/HanavePtyLtd/projectConstants.git", .branch("master")),
         // Dependencies declare other packages that this package depends on.
         // .package(url: /* package url */, from: "1.0.0"),
     ],
