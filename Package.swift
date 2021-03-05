@@ -3,6 +3,8 @@
 import PackageDescription
 import Foundation
 
+let package : Package
+
 #if os(Linux)
 let isLinux = true
 #else
@@ -14,7 +16,7 @@ if isLinux && app != "" {
 
 let username = ProcessInfo.processInfo.environment["GITHUBNAME"] ?? ""
 let password =  ProcessInfo.processInfo.environment["GITHUBSECRET"] ?? ""
-let package = Package(
+ package = Package(
     name: "Zara-Logger",
     products: [
         // Products define the executables and libraries produced by a package, and make them visible to other packages.
@@ -36,7 +38,7 @@ let package = Package(
     ]
 )
 } else {
-let package = Package(
+ package = Package(
     name: "Zara-Logger",
     platforms: [
         // .macOS(.v10_15),
