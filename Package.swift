@@ -8,7 +8,12 @@ let isLinux = true
 #else
 let isLinux = false
 #endif
-if isLinux {
+let app =  ProcessInfo.processInfo.environment["APP"] ?? ""
+
+if isLinux && app != "" {
+
+let username = ProcessInfo.processInfo.environment["GITHUBNAME"] ?? ""
+let password =  ProcessInfo.processInfo.environment["GITHUBSECRET"] ?? ""
 let package = Package(
     name: "Zara-Logger",
     products: [
@@ -18,7 +23,7 @@ let package = Package(
             targets: ["Zara-Logger"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/HanavePtyLtd/projectConstants.git", .branch("master")),
+        .package(url: "https://\(username):\(password)@github.com/HanavePtyLtd/projectConstants.git", .branch("master")),
         // Dependencies declare other packages that this package depends on.
         // .package(url: /* package url */, from: "1.0.0"),
     ],
