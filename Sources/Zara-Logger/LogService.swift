@@ -116,7 +116,7 @@ open class LogService {
     ///Recursive method call to rename log files
     func rename(_ index: Int) {
         let fileManager = FileManager.default
-        let path = "\(directory)/\(logName(index))"
+        let path = "\(directory)/\(logName(index))"	
         let newPath = "\(directory)/\(logName(index+1))"
         if fileManager.fileExists(atPath: newPath) {
             rename(index+1)
