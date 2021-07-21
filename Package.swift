@@ -25,7 +25,7 @@ let password =  ProcessInfo.processInfo.environment["GITHUBSECRET"] ?? ""
             targets: ["Zara-Logger"]),
     ],
     dependencies: [
-        .package(url: "https://\(username):\(password)@github.com/HanavePtyLtd/projectConstants.git", .branch("master")),
+        .package(url: "https://\(username):\(password)@github.com/HanavePtyLtd/projectConstants.git", .branch("main")),
         // Dependencies declare other packages that this package depends on.
         // .package(url: /* package url */, from: "1.0.0"),
     ],
