@@ -28,16 +28,10 @@ open class LogService {
     open var directory : String {
         var directory = LogService.defaultDirectory()
         directory = NSString(string: directory).expandingTildeInPath
-        
-        let fileManager = FileManager.default
-        if !fileManager.fileExists(atPath: directory) {
-            do {
-                try fileManager.createDirectory(atPath: directory, withIntermediateDirectories: true, attributes: nil)
-            } catch {
-                NSLog("Couldn't create directory at \(directory)")
-            }
-            
-            
+        do {
+            try FileOperations.createDir(at: directory)
+        } catch {
+            print("Unable to create Directory \(directory)")
         }
         return LogService.defaultDirectory()
     }
@@ -67,31 +61,19 @@ open class LogService {
     
     ///write content to the current log file.
     open func write(_ text: Any, terminator: String = "\n") {
-        let path = currentPath
-        let fileManager = FileManager.default
-        if !fileManager.fileExists(atPath: path) {
-            do {
-                try "".write(toFile: path, atomically: true, encoding: String.Encoding.utf8)
-            } catch _ {
-            }
+        let writeText : String
+        let test = type(of: text)
+        switch test {
+        case is String.Type, is Int.Type, is Bool.Type:
+            writeText = "\(text)\(terminator)"
+        case is Date.Type:
+            writeText = "\((text as! Date).timeStamp())\(terminator)"
+        default:
+            writeText = "\(description(r: text))\(terminator)"
         }
-        if let fileHandle = FileHandle(forWritingAtPath: path) {
-            let writeText : String
-            let test = type(of: text)
-            switch test {
-            case is String.Type, is Int.Type, is Bool.Type:
-                writeText = "\(text)\(terminator)"
-            case is Date.Type:
-                writeText = "\((text as! Date).timeStamp())\(terminator)"
-            default:
-                writeText = "\(description(r: text))\(terminator)"
-            }
-            
-            fileHandle.seekToEndOfFile()
-            fileHandle.write(writeText.data(using: String.Encoding.utf8)!)
-            fileHandle.closeFile()
-            cleanup()
-        }
+        
+        try? FileOperations.writeAtEndOf(path: currentPath, data: writeText.data(using: .utf8)!)
+        cleanup()
     }
     ///do the checks and cleanup
     func cleanup() {
@@ -166,18 +148,14 @@ open class LogService {
     ///get the default log directory
     class func defaultDirectory() -> String {
         var path = ""
-        let fileManager = FileManager.default
         #if os(iOS)
         let paths = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)
         path = "\(paths[0])/Logs"
         #elseif os(macOS) || os(Linux)
         path = "/Users/server/logs/\(Date().dateString())"
         #endif
-        if !fileManager.fileExists(atPath: path) && path != ""  {
-            do {
-                try fileManager.createDirectory(atPath: path, withIntermediateDirectories: false, attributes: nil)
-            } catch _ {
-            }
+        if FileOperations.checkFileExists(atPath: path) && path != ""  {
+            try? FileOperations.createDir(at: path)
         }
         return path
     }
