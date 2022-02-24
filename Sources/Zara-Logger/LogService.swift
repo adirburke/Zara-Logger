@@ -61,6 +61,7 @@ open class LogService {
     
     ///write content to the current log file.
     open func write(_ text: Any, terminator: String = "\n") {
+        do {
         let writeText : String
         let test = type(of: text)
         switch test {
@@ -72,8 +73,11 @@ open class LogService {
             writeText = "\(description(r: text))\(terminator)"
         }
         
-        try? FileOperations.writeAtEndOf(path: currentPath, data: writeText.data(using: .utf8)!)
+        try FileOperations.writeAtEndOf(path: currentPath, data: writeText.data(using: .utf8)!)
         cleanup()
+        } catch {
+            print(error.localizedDescription)
+        }
     }
     ///do the checks and cleanup
     func cleanup() {
