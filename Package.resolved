@@ -1,0 +1,16 @@
+{
+  "object": {
+    "pins": [
+      {
+        "package": "Common",
+        "repositoryURL": "https://github.com/HanavePtyLtd/projectConstants.git",
+        "state": {
+          "branch": "main",
+          "revision": "50a8c564afbb731bcd4bce30e0f8d64f11452d84",
+          "version": null
+        }
+      }
+    ]
+  },
+  "version": 1
+}
