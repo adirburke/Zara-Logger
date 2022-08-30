@@ -8,10 +8,11 @@
 import Foundation
 import Common
 
-//import ZaraDTO
+
 
 ///The log class containing all the needed methods
 open class LogService {
+   
     public init(name : String, withStart : Bool = true) {
         self.name = name
         if withStart {
