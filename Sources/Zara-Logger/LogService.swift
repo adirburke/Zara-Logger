@@ -165,6 +165,13 @@ open class LogService {
         return path
     }
     
+    public func logger(_ message : String, console : Bool = true) {
+//        let message = message.replacingOccurrences(of: "\n", with: "") + "\n"
+        if console {
+            print(message)
+        }
+        self.write(message)
+    }
     
     
     public func logMessage(_ s: Any..., terminator: String = "\n", console : Bool = true) {
