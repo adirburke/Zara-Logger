@@ -166,11 +166,10 @@ open class LogService {
     }
     
     public func logger(_ message : String, console : Bool = true) {
-//        let message = message.replacingOccurrences(of: "\n", with: "") + "\n"
         if console {
-            print(message)
+            print("[\(Date().timeStamp())] :", message)
         }
-        self.write(message)
+        self.write("[\(Date().timeStamp())] :" + message)
     }
     
     
