@@ -167,9 +167,9 @@ open class LogService {
     
     public func logger(_ message : String, console : Bool = true) {
         if console {
-            print("[\(Date().timeStamp())] :", message)
+            print("[\(Date().timeStamp())] : ", message)
         }
-        self.write("[\(Date().timeStamp())] :" + message)
+        self.write("[\(Date().timeStamp())] : " + message)
     }
     
     
