@@ -8,10 +8,10 @@
 import Foundation
 import Common
 
-
+extension LogService : LogServiceProtocol {}
 
 ///The log class containing all the needed methods
-open class LogService {
+public struct LogService : Sendable  {
    
     public init(name : String, withStart : Bool = true) {
         self.name = name
@@ -20,13 +20,13 @@ open class LogService {
         }
     }
     ///The max size a log file can be in Kilobytes. Default is 1024 (1 MB)
-    open var maxFileSize: UInt64 = 2048
+    public var maxFileSize: UInt64 = 2048
     
     ///The max number of log file that will be stored. Once this point is reached, the oldest file is deleted.
-    open var maxFileCount = 99999
+    public var maxFileCount = 99999
     
     ///The directory in which the log files will be written
-    open var directory : String {
+    public var directory : String {
         var directory = LogService.defaultDirectory()
         directory = NSString(string: directory).expandingTildeInPath
         do {
@@ -37,7 +37,7 @@ open class LogService {
         return LogService.defaultDirectory()
     }
     
-    open var currentPath: String {
+    public var currentPath: String {
         return "\(directory)/\(logName(0))"
     }
     
@@ -53,7 +53,7 @@ open class LogService {
 
     
     ///Whether or not logging also prints to the console
-    open var printToConsole = true
+    public var printToConsole = true
     
     //the date formatter
     var dateFormatter: DateFormatter {
@@ -61,7 +61,7 @@ open class LogService {
     }
     
     ///write content to the current log file.
-    open func write(_ text: Any, terminator: String = "\n") {
+    public func write(_ text: Any, terminator: String = "\n") {
         do {
         let writeText : String
         let test = type(of: text)
@@ -151,7 +151,7 @@ open class LogService {
     }
     
     ///get the default log directory
-    class func defaultDirectory() -> String {
+    static func defaultDirectory() -> String {
         var path = ""
         #if os(iOS)
         let paths = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)
