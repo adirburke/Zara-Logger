@@ -35,6 +35,7 @@ device = "minipc";   // "minipc" | "cm3500"  (add more in the table below)
 DEVICES = [
     [ "minipc", 43,    120, 115, 4, 3, false, "ported" ],
     [ "cm3500", 44.45, 145, 135, 1, 4, true,  "open"   ],   // W=1RU, measured
+    [ "ht801",  30.5,  99,  99,  4, 3, true,  "open"   ],   // Grandstream ATA
 ];
 
 // ---- Print splitting (even bay counts only) --------------------------------
