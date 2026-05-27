@@ -12,8 +12,8 @@
 //  cable modem in a partial cradle).
 //
 //    device="minipc"  -> 4 bays, fully cradled (120mm tall) on a 3U panel
-//    device="cm3500"  -> 1 vented channel for an ARRIS CM3500 (230x57x195),
-//                        cradled in the lower 3U; the modem pokes up & out back
+//    device="cm3500"  -> 1 vented channel for an ARRIS CM3500 (145H x 135D x
+//                        1RU W); cradled on a 3U panel, pokes ~16mm above top
 //
 //  Examples:
 //    openscad -D device=\"minipc\"               -o minipc.stl   rack_mount.scad
@@ -32,8 +32,8 @@ device = "minipc";   // "minipc" | "cm3500"  (add more in the table below)
 //   wall_vent= louvre the side walls? (big side faces need airflow)
 //   back     = "ported" (back wall w/ port windows) | "open" (overhanging dev)
 DEVICES = [
-    [ "minipc", 43, 120, 115, 4, false, "ported" ],
-    [ "cm3500", 57, 230, 195, 1, true,  "open"   ],
+    [ "minipc", 43,    120, 115, 4, false, "ported" ],
+    [ "cm3500", 44.45, 145, 135, 1, true,  "open"   ],   // W=1RU, measured
 ];
 
 // ---- Print splitting (even bay counts only) --------------------------------
@@ -52,7 +52,7 @@ slot_len = 12;      // horizontal mount-slot length (use 8 for a 250mm panel)
 
 // ---- Structure --------------------------------------------------------------
 clr         = 2.0;   // clearance around the device in its bay
-max_depth   = 125;   // cap cradle depth so it fits a 10" rack (devices overhang)
+max_depth   = 140;   // cap cradle depth so it fits a 10" rack (devices overhang)
 face_t      = 3.0;   // front faceplate thickness
 base        = 4.0;   // floor thickness
 div_t       = 3.0;   // divider / wall thickness
