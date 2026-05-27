@@ -24,16 +24,17 @@
 
 device = "minipc";   // "minipc" | "cm3500"  (add more in the table below)
 
-// ---- Device table : [ name, across(thick), high, deep, bays, wall_vent, back ]
+// ---- Device table : [ name, across, high, deep, bays, U, wall_vent, back ]
 //   across   = thickness, packed across the rack
 //   high     = device height (stands vertically); may exceed the panel
 //   deep     = device depth into the rack; may exceed the cradle (overhang ok)
 //   bays     = how many across
+//   U        = faceplate height in rack units for this device
 //   wall_vent= louvre the side walls? (big side faces need airflow)
 //   back     = "ported" (back wall w/ port windows) | "open" (overhanging dev)
 DEVICES = [
-    [ "minipc", 43,    120, 115, 4, false, "ported" ],
-    [ "cm3500", 44.45, 145, 135, 1, true,  "open"   ],   // W=1RU, measured
+    [ "minipc", 43,    120, 115, 4, 3, false, "ported" ],
+    [ "cm3500", 44.45, 145, 135, 1, 4, true,  "open"   ],   // W=1RU, measured
 ];
 
 // ---- Print splitting (even bay counts only) --------------------------------
@@ -43,7 +44,8 @@ seam_d = 3.2;        // alignment-dowel holes at the center seam
 
 // ---- 10" rack interface ----  *** VERIFY THESE AGAINST YOUR RACK ***  -------
 u_mm     = 44.45;   // 1U
-units    = 3;       // faceplate height in U
+units    = 0;       // 0 = use the device's default U; or force a height here
+bays     = 0;       // 0 = use the device's default bay count; or force here
 panel_w  = 254;     // 10-inch faceplate width (use 250 to print on a 256 bed)
 hole_dx  = 236;     // center-to-center between the LEFT and RIGHT rail holes
 edge_z   = 6.35;    // rail hole inset from top/bottom (EIA 0.25")
@@ -71,12 +73,13 @@ row     = DEVICES[search([device], DEVICES)[0]];
 dev_t   = row[1];
 dev_h   = row[2];
 dev_d   = row[3];
-n_bays  = row[4];
-w_vent  = row[5];
-back    = row[6];
+n_bays  = bays > 0 ? bays : row[4];
+w_vent  = row[6];
+back    = row[7];
 
 // ---- Derived ----------------------------------------------------------------
-panel_h  = units * u_mm;
+panel_units = units > 0 ? units : row[5];
+panel_h  = panel_units * u_mm;
 bay_w    = dev_t + 2*clr;
 pitch    = bay_w + div_t;
 total_w  = n_bays*bay_w + (n_bays + 1)*div_t;
