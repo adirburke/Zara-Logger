@@ -23,15 +23,20 @@ DEV = [
     [ "ht801",    100, 100, 29.5 ],   // ATA
 ];
 
-// ---- Shelves : [ name, [device(s) side by side], back-mode ] ----------------
-//   back = "wall" (solid stop, front-port devices) | "open" (rear-port devices)
+// ---- Shelves : [ name, [device(s) side by side], back-mode, [tweaks?] ] -----
+//   back   = "wall" (solid stop, front-port devices) | "open" (rear-port devices)
+//   tweaks = optional list of [key, value]; supported keys:
+//      "win"     -> [w, h, dx, dz]  override front window (per bay, centered + offsets)
+//      "notches" -> [ [side, pos, w, h], ... ]  side="L"|"R" (depth=pos) | "F" (x-offset=pos)
+//      "vent"    -> N  vent slots per bay   (default 3)
+//      "strap"   -> N  strap-slot pairs cut through side walls (default 2 if open, else 0)
 SHELVES = [
-    [ "ls1210gp", [ "ls1210gp" ], "wall" ],   // PoE switch, front ports
-    [ "sg1005d",  [ "sg1005d"  ], "wall" ],   // 5-port switch, front ports
-    [ "n100",     [ "n100"     ], "open" ],   // rear ETH/DC/COM
-    [ "cm3500",   [ "cm3500"   ], "open" ],   // rear ports
-    [ "minipc",   [ "minipc"   ], "open" ],   // rear ports
-    [ "ht801",    [ "ht801"    ], "open" ],   // rear ports
+    [ "ls1210gp", [ "ls1210gp" ], "wall", [ ["vent", 4] ] ],                 // PoE switch, warm
+    [ "sg1005d",  [ "sg1005d"  ], "wall", [] ],                              // 5-port switch
+    [ "n100",     [ "n100"     ], "open", [ ["vent", 4] ] ],                 // router, warm
+    [ "cm3500",   [ "cm3500"   ], "open", [] ],                              // modem
+    [ "minipc",   [ "minipc"   ], "open", [ ["vent", 5] ] ],                 // mini-PC, hot
+    [ "ht801",    [ "ht801"    ], "open", [] ],                              // ATA
 ];
 
 // ---- 10" rack interface  *** VERIFY ***  ------------------------------------
@@ -45,7 +50,7 @@ slot_len = 12;      // use 8 for a 250mm panel
 // ---- Structure --------------------------------------------------------------
 clr       = 2.0;
 face_t    = 3.0;
-base      = 2.0;    // thin floor so a ~43mm device still fits ~1U
+base      = 2.5;    // floor (chunky devices auto-promote to 2U, so 2.5 is safe)
 wall      = 2.5;
 front_lip = 4.0;
 ledge     = 6.0;
@@ -58,6 +63,14 @@ $fn = 40;
 srow  = SHELVES[search([shelf], SHELVES)[0]];
 items = srow[1];
 back  = srow[2];
+
+// Per-shelf tweak lookup ------------------------------------------------------
+function tweak(key, dflt) = let(
+    tw  = (len(srow) >= 4) ? srow[3] : [],
+    sr  = search([key], tw, 0),
+    idx = (len(sr) > 0 && len(sr[0]) > 0) ? sr[0][0] : -1
+) (idx >= 0) ? tw[idx][1] : dflt;
+
 function dev(name) = DEV[search([name], DEV)[0]];
 function dw(i) = dev(items[i])[1];
 function dd(i) = dev(items[i])[2];
@@ -66,8 +79,17 @@ function dh(i) = dev(items[i])[3];
 n      = len(items);
 maxh   = max([ for (i=[0:n-1]) dh(i) ]);
 maxd   = max([ for (i=[0:n-1]) dd(i) ]);
-panel_h = max(u_mm, ceil(maxh / u_mm) * u_mm);
+// Auto-promote U based on (device + floor); forceable via tweak "u".
+u_auto  = max(1, ceil((maxh + base) / u_mm));
+u_count = tweak("u", u_auto);
+panel_h = u_count * u_mm;
 tray_d  = maxd + clr;
+
+// Resolved tweaks -------------------------------------------------------------
+vent_n  = tweak("vent",    3);
+strap_n = tweak("strap",   (back == "open") ? 2 : 0);
+win_ov  = tweak("win",     [-1, -1, 0, 0]);   // [-1, -1] => use full-face default
+notches = tweak("notches", []);
 
 // bay widths and X positions (side by side)
 bayw   = [ for (i=[0:n-1]) dw(i) + 2*clr ];
@@ -92,11 +114,23 @@ module xslot(len, d, depth) {
 module faceplate() {
     difference() {
         translate([-panel_w/2, -face_t, 0]) cube([panel_w, face_t, panel_h]);
+        // Front window per bay (override via tweak "win" = [w, h, dx, dz])
         for (i = [0:n-1]) {
-            w = dw(i) - 2*front_lip;
-            translate([bcx(i) - w/2, -face_t - 1, base])
-                cube([w, face_t + 2, min(dh(i), panel_h - base)]);
+            def_w = dw(i) - 2*front_lip;
+            def_h = min(dh(i), panel_h - base);
+            ww = (win_ov[0] > 0) ? win_ov[0] : def_w;
+            wh = (win_ov[1] > 0) ? win_ov[1] : def_h;
+            wdx = win_ov[2];
+            wdz = win_ov[3];
+            translate([bcx(i) + wdx - ww/2, -face_t - 1, base + wdz])
+                cube([ww, face_t + 2, wh]);
         }
+        // Front-face notches (cable/antenna): cut from top of faceplate down by h
+        for (nt = notches) if (nt[0] == "F")
+            translate([nt[1] - nt[2]/2, -face_t - 1, panel_h - nt[3]])
+                cube([nt[2], face_t + 2, nt[3] + 1]);
+        // Rack mounting slots (bottom of panel + top of panel; always align with
+        // rack holes for any integer U count)
         for (sx = [-1, 1], sz = [edge_z, panel_h - edge_z])
             translate([sx*hole_dx/2, -face_t - 1, sz])
                 xslot(slot_len, screw_d, face_t + 2);
@@ -104,24 +138,64 @@ module faceplate() {
 }
 
 module tray() {
-    // Floor with vent slots, one bay region per device
+    strap_l  = 22;                                       // slot length (along depth)
+    strap_t  = 4;                                        // slot height (vertical)
+    wall_top = min(base + maxh, panel_h);                // actual top of side walls
+    strap_z  = wall_top - strap_t - 2;                   // sit inside wall, near top
+
     difference() {
-        translate([-totalw/2, -ov, 0]) cube([totalw, tray_d + ov, base]);
-        for (i = [0:n-1])
-            for (gx = [-1:1:1])
-                translate([bcx(i) + gx*(dw(i)/3.2) - 5, ledge, -1])
-                    cube([10, tray_d - 2*ledge, base + 2]);
+        union() {
+            // Floor with vent slots (vent_n slots per bay along width)
+            difference() {
+                translate([-totalw/2, -ov, 0]) cube([totalw, tray_d + ov, base]);
+                for (i = [0:n-1])
+                    for (gi = [0 : vent_n - 1]) {
+                        // distribute slot centers across the device width
+                        frac = (vent_n == 1) ? 0
+                                             : (gi/(vent_n - 1) - 0.5);
+                        cx   = bcx(i) + frac * (dw(i) - 18);
+                        translate([cx - 5, ledge, -1])
+                            cube([10, tray_d - 2*ledge, base + 2]);
+                    }
+            }
+            // Side walls + dividers (capped at panel_h)
+            for (i = [0:n]) {
+                h = (i == 0) ? dh(0) : (i == n ? dh(n-1) : max(dh(i-1), dh(i)));
+                x = (i == 0) ? -totalw/2
+                             : (i == n ? totalw/2 - wall : bx0(i) - wall);
+                translate([x, -ov, 0])
+                    cube([wall, tray_d + ov, min(base + h, panel_h)]);
+            }
+            // Back stop (closed-back only)
+            if (back == "wall")
+                translate([-totalw/2, tray_d - ov, 0])
+                    cube([totalw, wall + ov, min(base + maxh, panel_h)]);
+        }
+        // Strap slots cut through ALL side walls of each bay
+        if (strap_n > 0)
+            for (i = [0:n-1])
+                for (s = [0 : strap_n - 1]) {
+                    cy = (strap_n == 1)
+                         ? tray_d/2
+                         : ledge + (tray_d - 2*ledge - strap_l)
+                                   * s / (strap_n - 1) + strap_l/2;
+                    // Left wall of bay i
+                    translate([bx0(i) - wall - 1, cy - strap_l/2, strap_z])
+                        cube([wall + 2, strap_l, strap_t]);
+                    // Right wall of bay i
+                    translate([bx0(i) + bayw[i] - 1, cy - strap_l/2, strap_z])
+                        cube([wall + 2, strap_l, strap_t]);
+                }
+        // Side-wall notches (cable/antenna): cut from top down by h
+        for (nt = notches) {
+            if (nt[0] == "L")
+                translate([-totalw/2 - 1, nt[1] - nt[2]/2, panel_h - nt[3]])
+                    cube([wall + 2, nt[2], nt[3] + 1]);
+            if (nt[0] == "R")
+                translate([totalw/2 - wall - 1, nt[1] - nt[2]/2, panel_h - nt[3]])
+                    cube([wall + 2, nt[2], nt[3] + 1]);
+        }
     }
-    // Side walls + dividers between bays (height = each device, capped at panel)
-    for (i = [0:n]) {
-        h = (i == 0) ? dh(0) : (i == n ? dh(n-1) : max(dh(i-1), dh(i)));
-        x = (i == 0) ? -totalw/2 : (i == n ? totalw/2 - wall : bx0(i) - wall);
-        translate([x, -ov, 0]) cube([wall, tray_d + ov, min(base + h, panel_h)]);
-    }
-    // Back stop
-    if (back == "wall")
-        translate([-totalw/2, tray_d - ov, 0])
-            cube([totalw, wall + ov, min(base + maxh, panel_h)]);
 }
 
 module ghost() {
