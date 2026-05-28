@@ -31,12 +31,23 @@ DEV = [
 //      "vent"    -> N  vent slots per bay   (default 3)
 //      "strap"   -> N  strap-slot pairs cut through side walls (default 2 if open, else 0)
 SHELVES = [
-    [ "ls1210gp", [ "ls1210gp" ], "wall", [ ["vent", 4] ] ],                 // PoE switch, warm
-    [ "sg1005d",  [ "sg1005d"  ], "wall", [] ],                              // 5-port switch
-    [ "n100",     [ "n100"     ], "open", [ ["vent", 4] ] ],                 // router, warm
-    [ "cm3500",   [ "cm3500"   ], "open", [] ],                              // modem
-    [ "minipc",   [ "minipc"   ], "open", [ ["vent", 5] ] ],                 // mini-PC, hot
-    [ "ht801",    [ "ht801"    ], "open", [] ],                              // ATA
+    [ "ls1210gp", [ "ls1210gp" ], "wall",
+        [ ["vent", 4],
+          ["win",  [180, 16, 0, 4]] ] ],                        // 8x RJ45 PoE band
+    [ "sg1005d",  [ "sg1005d"  ], "wall",
+        [ ["win",  [110, 14, 0, 4]] ] ],                        // 5x RJ45 band
+    [ "n100",     [ "n100"     ], "open",
+        [ ["vent", 4],
+          ["win",  [95, 18, 0, 8]],                             // power+USB+audio
+          ["notches", [ ["L", 105, 12, 8] ]] ] ],               // DC cable strain relief
+    [ "cm3500",   [ "cm3500"   ], "open",
+        [ ["win",  [95, 14, 0, 14]],                            // horizontal LED strip
+          ["notches", [ ["L", 115, 14, 10] ]] ] ],              // coax routing channel
+    [ "minipc",   [ "minipc"   ], "open",
+        [ ["vent", 5],
+          ["win",  [90, 18, 0, 8]] ] ],                         // power+USB
+    [ "ht801",    [ "ht801"    ], "open",
+        [ ["win",  [60, 10, 0, 11]] ] ],                        // status LEDs only
 ];
 
 // ---- 10" rack interface  *** VERIFY ***  ------------------------------------
@@ -86,10 +97,11 @@ panel_h = u_count * u_mm;
 tray_d  = maxd + clr;
 
 // Resolved tweaks -------------------------------------------------------------
-vent_n  = tweak("vent",    3);
-strap_n = tweak("strap",   (back == "open") ? 2 : 0);
-win_ov  = tweak("win",     [-1, -1, 0, 0]);   // [-1, -1] => use full-face default
-notches = tweak("notches", []);
+vent_n   = tweak("vent",    3);
+strap_n  = tweak("strap",   (back == "open") ? 2 : 0);
+win_ov   = tweak("win",     [-1, -1, 0, 0]);  // [-1, -1] => use full-face default
+notches  = tweak("notches", []);
+wall_top = min(base + maxh, panel_h);         // actual top of side walls
 
 // bay widths and X positions (side by side)
 bayw   = [ for (i=[0:n-1]) dw(i) + 2*clr ];
@@ -140,7 +152,6 @@ module faceplate() {
 module tray() {
     strap_l  = 22;                                       // slot length (along depth)
     strap_t  = 4;                                        // slot height (vertical)
-    wall_top = min(base + maxh, panel_h);                // actual top of side walls
     strap_z  = wall_top - strap_t - 2;                   // sit inside wall, near top
 
     difference() {
@@ -186,13 +197,13 @@ module tray() {
                     translate([bx0(i) + bayw[i] - 1, cy - strap_l/2, strap_z])
                         cube([wall + 2, strap_l, strap_t]);
                 }
-        // Side-wall notches (cable/antenna): cut from top down by h
+        // Side-wall notches (cable/antenna): cut from top of side wall down by h
         for (nt = notches) {
             if (nt[0] == "L")
-                translate([-totalw/2 - 1, nt[1] - nt[2]/2, panel_h - nt[3]])
+                translate([-totalw/2 - 1, nt[1] - nt[2]/2, wall_top - nt[3]])
                     cube([wall + 2, nt[2], nt[3] + 1]);
             if (nt[0] == "R")
-                translate([totalw/2 - wall - 1, nt[1] - nt[2]/2, panel_h - nt[3]])
+                translate([totalw/2 - wall - 1, nt[1] - nt[2]/2, wall_top - nt[3]])
                     cube([wall + 2, nt[2], nt[3] + 1]);
         }
     }
