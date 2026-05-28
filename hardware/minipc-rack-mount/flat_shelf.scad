@@ -23,13 +23,15 @@ DEV = [
     [ "ht801",    100, 100, 29.5 ],   // ATA
 ];
 
-// ---- Shelves : which device(s) go on each shelf, side by side ---------------
+// ---- Shelves : [ name, [device(s) side by side], back-mode ] ----------------
+//   back = "wall" (solid stop, front-port devices) | "open" (rear-port devices)
 SHELVES = [
-    [ "ls1210gp", [ "ls1210gp" ]        ],
-    [ "sg1005d",  [ "sg1005d"  ]        ],
-    [ "n100",     [ "n100"     ]        ],
-    [ "cm3500",   [ "cm3500"   ]        ],
-    [ "combo",    [ "minipc", "ht801" ] ],   // shared 1U
+    [ "ls1210gp", [ "ls1210gp" ], "wall" ],   // PoE switch, front ports
+    [ "sg1005d",  [ "sg1005d"  ], "wall" ],   // 5-port switch, front ports
+    [ "n100",     [ "n100"     ], "open" ],   // rear ETH/DC/COM
+    [ "cm3500",   [ "cm3500"   ], "open" ],   // rear ports
+    [ "minipc",   [ "minipc"   ], "open" ],   // rear ports
+    [ "ht801",    [ "ht801"    ], "open" ],   // rear ports
 ];
 
 // ---- 10" rack interface  *** VERIFY ***  ------------------------------------
@@ -43,18 +45,19 @@ slot_len = 12;      // use 8 for a 250mm panel
 // ---- Structure --------------------------------------------------------------
 clr       = 2.0;
 face_t    = 3.0;
-base      = 2.5;    // thin floor so a ~43mm device still fits ~1U
+base      = 2.0;    // thin floor so a ~43mm device still fits ~1U
 wall      = 2.5;
 front_lip = 4.0;
 ledge     = 6.0;
-back      = "wall"; // "wall" (solid back stop) | "open"
 ov        = 0.8;
 
 show_dev = false;
 $fn = 40;
 
 // ---- Resolve shelf ----------------------------------------------------------
-items = SHELVES[search([shelf], SHELVES)[0]][1];
+srow  = SHELVES[search([shelf], SHELVES)[0]];
+items = srow[1];
+back  = srow[2];
 function dev(name) = DEV[search([name], DEV)[0]];
 function dw(i) = dev(items[i])[1];
 function dd(i) = dev(items[i])[2];
@@ -92,7 +95,7 @@ module faceplate() {
         for (i = [0:n-1]) {
             w = dw(i) - 2*front_lip;
             translate([bcx(i) - w/2, -face_t - 1, base])
-                cube([w, face_t + 2, dh(i)]);
+                cube([w, face_t + 2, min(dh(i), panel_h - base)]);
         }
         for (sx = [-1, 1], sz = [edge_z, panel_h - edge_z])
             translate([sx*hole_dx/2, -face_t - 1, sz])
@@ -113,12 +116,12 @@ module tray() {
     for (i = [0:n]) {
         h = (i == 0) ? dh(0) : (i == n ? dh(n-1) : max(dh(i-1), dh(i)));
         x = (i == 0) ? -totalw/2 : (i == n ? totalw/2 - wall : bx0(i) - wall);
-        translate([x, -ov, 0]) cube([wall, tray_d + ov, base + min(h, panel_h)]);
+        translate([x, -ov, 0]) cube([wall, tray_d + ov, min(base + h, panel_h)]);
     }
     // Back stop
     if (back == "wall")
         translate([-totalw/2, tray_d - ov, 0])
-            cube([totalw, wall + ov, base + min(maxh, panel_h)]);
+            cube([totalw, wall + ov, min(base + maxh, panel_h)]);
 }
 
 module ghost() {
