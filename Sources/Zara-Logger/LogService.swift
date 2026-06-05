@@ -60,8 +60,22 @@ public struct LogService : Sendable  {
         return Globals.Date.TimeStamp
     }
     
+    ///When true (env `LOG_STDOUT_ONLY` ∈ {true,1,yes}), file logging is skipped
+    ///entirely — log lines still reach stdout via the console path in
+    ///`logger()`/`logMessage()`. For containerized apps whose stdout is collected
+    ///centrally (e.g. Alloy/Loki) and which must not require a writable log volume
+    ///(the hardcoded `/Users/server/logs` path needs a PVC otherwise). Default off,
+    ///so every existing file-logging consumer is unchanged.
+    static let stdoutOnly: Bool = {
+        switch ProcessInfo.processInfo.environment["LOG_STDOUT_ONLY"]?.lowercased() {
+        case "true", "1", "yes": return true
+        default: return false
+        }
+    }()
+
     ///write content to the current log file.
     public func write(_ text: Any, terminator: String = "\n") {
+        if LogService.stdoutOnly { return }
         do {
         let writeText : String
         let test = type(of: text)
