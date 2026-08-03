@@ -45,10 +45,18 @@ public struct LogService : Sendable  {
     let name : String
 
     
+    ///Emit a line to whichever sinks are active. `write` no-ops under
+    ///`LOG_STDOUT_ONLY`, so the banner/API-trace helpers below — which have no
+    ///`console:` argument of their own — need stdout explicitly or they vanish.
+    private func emit(_ line: String) {
+        if LogService.stdoutOnly { print(line) }
+        write(line)
+    }
+
     func start() {
-            write("===========================================================")
-            write("==========  START \(name) \(Date().timeStamp()) ===========")
-            write("===========================================================")
+            emit("===========================================================")
+            emit("==========  START \(name) \(Date().timeStamp()) ===========")
+            emit("===========================================================")
     }
 
     
@@ -72,6 +80,18 @@ public struct LogService : Sendable  {
         default: return false
         }
     }()
+
+    ///The effective console flag for a call site's `console:` argument.
+    ///
+    ///`console: false` means "file only", which is fine while the file sink
+    ///exists. Under `LOG_STDOUT_ONLY` there is no file sink, so those call
+    ///sites would write to NO destination at all — silently losing them.
+    ///That is not theoretical: `EventService.logError`/`logEvent`/`logMain`
+    ///all default to `console: false`, so the error path would go dark.
+    ///In stdout-only mode stdout has to carry everything.
+    static func toConsole(_ console: Bool) -> Bool {
+        console || stdoutOnly
+    }
 
     ///write content to the current log file.
     public func write(_ text: Any, terminator: String = "\n") {
@@ -153,10 +173,10 @@ public struct LogService : Sendable  {
     }
     
     public func apiLog(_ function : String, _ type : String,_  xml : String) {
-        write("====================================================")
-        write("\(Date().timeStamp()) \(function) \(type)")
-        write(xml)
-        
+        emit("====================================================")
+        emit("\(Date().timeStamp()) \(function) \(type)")
+        emit(xml)
+
     }
     
     ///gets the log name
@@ -180,14 +200,15 @@ public struct LogService : Sendable  {
     }
     
     public func logger(_ message : String, console : Bool = true) {
-        if console {
+        if LogService.toConsole(console) {
             print("[\(Date().timeStamp())] : ", message)
         }
         self.write("[\(Date().timeStamp())] : " + message)
     }
-    
-    
+
+
     public func logMessage(_ s: Any..., terminator: String = "\n", console : Bool = true) {
+        let console = LogService.toConsole(console)
         if console {print(Date().timeStamp(), separator: "", terminator: " : ")}
         self.write("[\(Date().timeStamp())]", terminator: " : ")
         for i in s {
@@ -202,6 +223,7 @@ public struct LogService : Sendable  {
 }
 
 public func logMessage(log : LogService, _ s: Any..., terminator: String = "\n", console : Bool = true) {
+    let console = LogService.toConsole(console)
     if console {print(Date().timeStamp(), separator: "", terminator: " : ")}
     log.write("[\(Date().timeStamp())]", terminator: " : ")
     for i in s {
